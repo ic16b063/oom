@@ -31,24 +31,30 @@ namespace Task4
         private string Konto_Inhaber_Nachname;
         private int WP_Risikoklasse_Konto;
         public string WP_Anmerkung;
-    
+
         //Vollkonstruktor
-        public Wertpapierdepot(uint NeueKontonummer, string NeuerVorname, string NeuerNachname, int Risikoklasse)
+        [JsonConstructor]
+        public Wertpapierdepot(uint getkontonummer, uint getbankleitzahl, decimal saldo, string vorname, string nachname, int risikoklasse, string wp_anmerkung)
         {
-            if (NeueKontonummer < 1000000 || NeueKontonummer > 9999999)
+            if (getkontonummer < 1000000 || getkontonummer > 9999999)
                 throw new ArgumentOutOfRangeException("Unpassende Kontonummer!\nDie Kontonummer für WP-Depots muss 7-stellig sein!\n");
-            if (NeuerVorname == "" || NeuerNachname == "")
+            if (vorname == "" || nachname == "")
                 throw new ArgumentException("Fehler beim Namen!\nDa Wertpapierdepots nur natürlichen Personen gehören können muss ein vollständiger Name erfasst werden!\n");
-            if (Risikoklasse < -5 || Risikoklasse > 5)
+            if (risikoklasse < -5 || risikoklasse > 5)
                 throw new ArgumentOutOfRangeException("Die Risikoklasse muss zwischen -5 und +5 liegen!");
 
-            WP_Kontonummer = NeueKontonummer;
-            WP_Bankleitzahl = 20111;
-            WP_Saldo = 0;
-            Konto_Inhaber_Vorname = NeuerVorname;
-            Konto_Inhaber_Nachname = NeuerNachname;
-            WP_Risikoklasse_Konto = Risikoklasse;
-            WP_Anmerkung = "";
+            WP_Kontonummer = getkontonummer;
+            WP_Bankleitzahl = getbankleitzahl;
+            Saldo = saldo;
+            Vorname = vorname;
+            Nachname = nachname;
+            Risikoklasse = risikoklasse;
+            WP_Anmerkung = wp_anmerkung;
+        }
+
+        public Wertpapierdepot(uint NeueKontonummer, string NeuerVorname, string NeuerNachname, int Risikoklasse) :
+            this (NeueKontonummer, 20111, 0, NeuerVorname, NeuerNachname, Risikoklasse, "")
+        {
         }
 
         public uint GetKontonummer => WP_Kontonummer;
@@ -119,24 +125,30 @@ namespace Task4
         public string GI_AliasName;
 
         //Vollkonstruktor
-        public Girokonto(uint NeueKontonummer, string NeuerVorname, string NeuerNachname)
+        [JsonConstructor]
+        public Girokonto(uint getkontonummer, uint getbankleitzahl, decimal saldo, string vorname, string nachname, string gi_anmerkung, string gi_aliasname)
         {
-            if (NeueKontonummer < 10000000 || NeueKontonummer > 99999999)
+            if (getkontonummer < 10000000 || getkontonummer > 99999999)
                 throw new ArgumentOutOfRangeException("Unpassende Kontonummer!\nDie Kontonummer für Girokonten muss 8-stellig sein!\n");
 
-            GI_Kontonummer = NeueKontonummer;
-            GI_Bankleitzahl = 20111;
-            GI_Saldo = 0;
-            Konto_Inhaber_Vorname = NeuerVorname;
-            Konto_Inhaber_Nachname = NeuerNachname;
-            GI_Anmerkung = "";
-            GI_AliasName = "";
+            GI_Kontonummer = getkontonummer;
+            GI_Bankleitzahl = getbankleitzahl;
+            GI_Saldo = saldo;
+            Vorname = vorname;
+            Nachname = nachname;
+            GI_Anmerkung = gi_anmerkung;
+            GI_AliasName = gi_aliasname;
+        }
+        
+        public Girokonto(uint NeueKontonummer, string NeuerVorname, string NeuerNachname) :
+            this(NeueKontonummer, 20111, 0, NeuerVorname, NeuerNachname, "", "")
+        {
         }
 
         //Konstruktor für Institutskonto
-        public Girokonto(uint NeueKontonummer) : this(NeueKontonummer, "Institutskonto!", "Institutskonto!")
+        public Girokonto(uint NeueKontonummer) :
+            this(NeueKontonummer, "Institutskonto!", "Institutskonto!")
         {
-
         }   
 
         public decimal Saldo
@@ -213,8 +225,9 @@ namespace Task4
                 Console.WriteLine("\n");
             }
             Console.WriteLine("-----------Ende der normalen Ausgabe----------\n" +
-                "Start der JSON Bearbeitung und deren Ausgabe\n\n");
+                "Start der JSON Serialisierung und deren Ausgabe\n\n");
 
+            /*
             string s = "";
             string filepathGI = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\GI.txt";
             string filepathWP = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\WP.txt";
@@ -238,6 +251,22 @@ namespace Task4
             string wp = "WP:\n" + System.IO.File.ReadAllText(filepathWP);
             Console.WriteLine(gi);
             Console.WriteLine(wp);
+            */
+            var settings = new JsonSerializerSettings() { Formatting = Formatting.Indented, TypeNameHandling = TypeNameHandling.Auto };
+            var text = JsonConvert.SerializeObject(Bestand, settings);
+            var desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            string filename = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\Konten.json";
+            System.IO.File.WriteAllText(filename, text);
+
+
+            var textFromFile = System.IO.File.ReadAllText(filename);
+            Console.WriteLine(textFromFile);
+            Console.WriteLine("-----------Ende der Ausgabe vom File----------\n" +
+                "Start der JSON Deserialisierung und deren Ausgabe\n\n");
+            var itemsFromFile = JsonConvert.DeserializeObject<IKonto[]>(textFromFile, settings);
+            //var itemsFromFile = JsonConvert.DeserializeObject(textFromFile, settings);
+            foreach (var x in itemsFromFile)
+                Console.WriteLine("Kontonummer: {0}\n", x.GetKontonummer);
         }
     }
 }
