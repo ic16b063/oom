@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 
 namespace Task4
 {
@@ -197,7 +199,11 @@ namespace Task4
         static void Main(string[] args)
         {
             IKonto[] Bestand = new IKonto[4];
+            IKonto[] genBestand = new IKonto[11];
 
+            Girokonto TestGi = new Girokonto(99999999);
+            genBestand[10] = TestGi;
+            
             Girokonto Kunde1 = new Girokonto(12345678, "Christian", "Posch");
             Girokonto Kunde2 = new Girokonto(23456789, "Karl Heinz", "Steinmetz");
             Girokonto ErsteBank = new Girokonto(11111111);
@@ -267,6 +273,19 @@ namespace Task4
             //var itemsFromFile = JsonConvert.DeserializeObject(textFromFile, settings);
             foreach (var x in itemsFromFile)
                 Console.WriteLine("Kontonummer: {0}\n", x.GetKontonummer);
+
+            PushSubjects.Run(genBestand);
+
+            while(genBestand[10].GetKontonummer == TestGi.GetKontonummer)
+            {
+
+            }
+
+            int l = 0;
+            for (l = 0; l < 10; l++)
+            {
+                Console.WriteLine("Kontonummer: {0}\n", genBestand[l].GetKontonummer);
+            }
         }
     }
 }
